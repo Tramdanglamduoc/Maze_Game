@@ -30,6 +30,7 @@ Notes:
 """
 
 import argparse
+from csv import writer
 import heapq
 import json
 import random
@@ -280,6 +281,7 @@ def subtask_a(grid: Grid, rows: int, cols: int, start: Position, goal: Position,
 
 ##############################
 # SUBTASK B - MINIMUM-COST PATH
+# Cost Model 1: Entering Cost
 ##############################
 
 def subtask_b(
@@ -843,6 +845,10 @@ def report_subtask_b(
     all_cost_models: bool,
 ) -> None:
     writer.section("Subtask B: Minimum-Cost Path")
+    writer.write()
+    writer.write("Cost Model Justification:")
+    writer.write("We chose Cost Model 1 (Entering Cost) because it represents the cost incurred when entering each cell,")
+    writer.write("which is a natural interpretation for maze navigation where cell values represent entrance fees or difficulty.")
 
     cost_models = [1, 2, 3] if all_cost_models else [1]
     movement_modes = ["4", "8"] if all_cost_models else [selected_mode]
