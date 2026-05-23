@@ -1,0 +1,349 @@
+======================================================================
+Maze Graph Algorithms â€” Final Group Project Output
+======================================================================
+maze_file = maze_10x10_A.txt
+maze_size = 10x10
+start = (0,0)
+goal = (9,9)
+vertices_4_directional = 76
+directed_neighbor_edges_4_directional = 194
+vertices_8_directional = 76
+directed_neighbor_edges_8_directional = 342
+
+======================================================================
+Assumptions and Notes
+======================================================================
+1. S and G are treated as passable cells with numeric value 0.
+2. X cells are walls and cannot be entered.
+3. For 4-directional movement, the allowed moves are up, down, left, and right.
+4. For 8-directional movement, diagonal moves are also allowed and count as one move.
+5. Diagonal movement is allowed if the destination cell is inside the maze and not a wall.
+6. No additional corner-cutting restriction is applied for diagonal moves.
+7. V means the number of passable cells; E means the number of graph edges.
+8. The program validates that the maze has exactly one S, exactly one G, valid characters, equal row lengths, and size at most 100x100.
+
+======================================================================
+Subtask A: Shortest Path by Number of Moves
+======================================================================
+movement = 4-directional
+minimum_moves = 18
+path = (0,0)->(1,0)->(2,0)->(2,1)->(3,1)->(4,1)->(4,2)->(4,3)->(4,4)->(5,4)->(6,4)->(7,4)->(8,4)->(8,5)->(9,5)->(9,6)->(9,7)->(9,8)->(9,9)
+path_visualization:
+*1234X6789
+*X2X4X6X89
+**111X1111
+X*XXX4XXX1
+1****43211
+1XXX*XXX21
+1111*11111
+9X9X*X9X91
+1234**2341
+9876X*****
+
+movement = 8-directional
+minimum_moves = 11
+path = (0,0)->(1,0)->(2,0)->(3,1)->(4,2)->(4,3)->(5,4)->(6,5)->(7,6)->(8,7)->(8,8)->(9,9)
+path_visualization:
+*1234X6789
+*X2X4X6X89
+*1111X1111
+X*XXX4XXX1
+12**543211
+1XXX*XXX21
+11115*1111
+9X9X5X*X91
+1234512**1
+9876X4321*
+
+Approach: Breadth-First Search (BFS).
+Reason: Every legal move has equal cost 1, so BFS guarantees the minimum number of moves.
+Time complexity: O(V + E).
+Space complexity: O(V).
+
+======================================================================
+Subtask B: Minimum-Cost Path
+======================================================================
+movement = 4-directional
+cost_model = 1 - entering (cost = value(v))
+minimum_cost = 26
+path = (0,0)->(1,0)->(2,0)->(2,1)->(3,1)->(4,1)->(4,0)->(5,0)->(6,0)->(6,1)->(6,2)->(6,3)->(6,4)->(6,5)->(6,6)->(6,7)->(6,8)->(6,9)->(7,9)->(8,9)->(9,9)
+
+Approach: Dijkstra's algorithm with a binary heap priority queue.
+Reason: All cell values and edge costs are non-negative, so Dijkstra correctly finds the minimum-cost path.
+Time complexity: O((V + E) log V).
+Space complexity: O(V + E) in general; for grid graphs this is usually simplified to O(V) because E is proportional to V.
+
+======================================================================
+Subtask C: Movement Mode Comparison
+======================================================================
+movement = 4-directional
+shortest_moves = 18
+shortest_path = (0,0)->(1,0)->(2,0)->(2,1)->(3,1)->(4,1)->(4,2)->(4,3)->(4,4)->(5,4)->(6,4)->(7,4)->(8,4)->(8,5)->(9,5)->(9,6)->(9,7)->(9,8)->(9,9)
+cost_of_shortest_path_using_entering_model = 51
+minimum_cost_entering_model = 26
+minimum_cost_path_moves = 20
+minimum_cost_path = (0,0)->(1,0)->(2,0)->(2,1)->(3,1)->(4,1)->(4,0)->(5,0)->(6,0)->(6,1)->(6,2)->(6,3)->(6,4)->(6,5)->(6,6)->(6,7)->(6,8)->(6,9)->(7,9)->(8,9)->(9,9)
+
+movement = 8-directional
+shortest_moves = 11
+shortest_path = (0,0)->(1,0)->(2,0)->(3,1)->(4,2)->(4,3)->(5,4)->(6,5)->(7,6)->(8,7)->(8,8)->(9,9)
+cost_of_shortest_path_using_entering_model = 34
+minimum_cost_entering_model = 18
+minimum_cost_path_moves = 15
+minimum_cost_path = (0,0)->(0,1)->(1,2)->(2,3)->(2,4)->(3,5)->(2,6)->(2,7)->(2,8)->(3,9)->(4,8)->(5,9)->(6,8)->(7,9)->(8,9)->(9,9)
+
+Does allowing diagonal movement change the shortest path length? Yes.
+4-directional shortest moves = 18; 8-directional shortest moves = 11.
+Does allowing diagonal movement change the cheapest path cost? Yes.
+4-directional minimum cost = 26; 8-directional minimum cost = 18.
+Is the fewest-moves path the same as the cheapest path in 4-directional mode? No.
+Explanation: BFS minimizes the number of moves, while Dijkstra minimizes the total cell cost. Therefore, a path with more moves can still be cheaper if it passes through lower-value cells.
+Time complexity: BFS is O(V + E); Dijkstra is O((V + E) log V).
+Space complexity: O(V) for BFS and O(V + E) for Dijkstra.
+
+======================================================================
+Subtask D: Maximum Flow from G to S
+======================================================================
+movement = 4-directional
+max_flow_G_to_S = 1
+positive_flow_edges_count = 18
+positive_flow_edges:
+(1,0)->(0,0): 1/100
+(2,0)->(1,0): 1/1
+(2,1)->(2,0): 1/1
+(3,1)->(2,1): 1/1
+(4,1)->(3,1): 1/3
+(4,2)->(4,1): 1/2
+(4,3)->(4,2): 1/3
+(4,4)->(4,3): 1/4
+(4,5)->(4,4): 1/5
+(4,6)->(4,5): 1/4
+(4,7)->(4,6): 1/3
+(4,8)->(4,7): 1/2
+(4,9)->(4,8): 1/1
+(5,9)->(4,9): 1/1
+(6,9)->(5,9): 1/1
+(7,9)->(6,9): 1/1
+(8,9)->(7,9): 1/1
+(9,9)->(8,9): 1/1
+
+movement = 8-directional
+max_flow_G_to_S = 4
+positive_flow_edges_count = 34
+positive_flow_edges:
+(0,1)->(0,0): 2/100
+(0,2)->(0,1): 1/1
+(1,0)->(0,0): 2/100
+(1,2)->(0,1): 1/1
+(1,2)->(0,2): 1/2
+(2,0)->(1,0): 1/1
+(2,1)->(1,0): 1/1
+(2,2)->(1,2): 1/2
+(2,3)->(1,2): 1/2
+(2,4)->(2,3): 1/1
+(3,1)->(2,0): 1/1
+(3,1)->(2,1): 1/1
+(3,1)->(2,2): 1/1
+(3,5)->(2,4): 1/1
+(4,2)->(3,1): 3/3
+(4,3)->(4,2): 3/3
+(4,6)->(3,5): 1/4
+(4,7)->(4,6): 1/3
+(5,4)->(4,3): 3/4
+(5,8)->(4,7): 1/2
+(6,5)->(5,4): 3/5
+(6,6)->(6,5): 1/1
+(6,8)->(5,8): 1/2
+(7,4)->(6,5): 1/1
+(7,6)->(6,5): 1/1
+(7,6)->(6,6): 1/1
+(7,9)->(6,8): 1/1
+(8,5)->(7,4): 1/5
+(8,7)->(7,6): 2/9
+(8,7)->(9,6): 1/3
+(8,8)->(7,9): 1/1
+(8,8)->(8,7): 3/3
+(9,6)->(8,5): 1/1
+(9,9)->(8,8): 4/4
+
+Approach: Edmonds-Karp algorithm, which is BFS-based Ford-Fulkerson.
+Vertices: all non-wall cells.
+Edges: directed edges between neighboring cells according to the selected movement mode.
+Capacity: capacity(u,v) = value(v), except capacity into S and G is 100.
+Source: G. Sink: S.
+Time complexity: O(V * E^2).
+Space complexity: O(V + E).
+
+======================================================================
+Subtask E: Minimum Spanning Tree of the Maze Graph
+======================================================================
+movement = 4-directional
+mst_total_weight = 390
+vertices_in_component = 76
+mst_edges_count = 75
+goal_reachable_from_S = True
+mst_edges:
+(0,0)-(0,1): weight 1
+(0,0)-(1,0): weight 1
+(0,1)-(0,2): weight 3
+(0,2)-(0,3): weight 5
+(0,3)-(0,4): weight 7
+(0,6)-(0,7): weight 13
+(0,7)-(0,8): weight 15
+(0,8)-(0,9): weight 17
+(1,0)-(2,0): weight 2
+(1,6)-(0,6): weight 12
+(2,0)-(2,1): weight 2
+(2,1)-(2,2): weight 2
+(2,1)-(3,1): weight 4
+(2,2)-(1,2): weight 3
+(2,2)-(2,3): weight 2
+(2,3)-(2,4): weight 2
+(2,4)-(1,4): weight 5
+(2,6)-(1,6): weight 7
+(2,7)-(2,6): weight 2
+(2,8)-(1,8): weight 9
+(2,8)-(2,7): weight 2
+(2,9)-(1,9): weight 10
+(2,9)-(2,8): weight 2
+(3,1)-(4,1): weight 5
+(3,9)-(2,9): weight 2
+(4,0)-(5,0): weight 2
+(4,1)-(4,0): weight 3
+(4,1)-(4,2): weight 5
+(4,2)-(4,3): weight 7
+(4,3)-(4,4): weight 9
+(4,5)-(3,5): weight 8
+(4,6)-(4,5): weight 7
+(4,7)-(4,6): weight 5
+(4,8)-(4,7): weight 3
+(4,9)-(3,9): weight 2
+(4,9)-(4,8): weight 2
+(5,0)-(6,0): weight 2
+(5,9)-(4,9): weight 2
+(6,0)-(6,1): weight 2
+(6,0)-(7,0): weight 10
+(6,1)-(6,2): weight 2
+(6,2)-(6,3): weight 2
+(6,2)-(7,2): weight 10
+(6,3)-(6,4): weight 6
+(6,4)-(5,4): weight 10
+(6,4)-(6,5): weight 6
+(6,4)-(7,4): weight 10
+(6,5)-(6,6): weight 2
+(6,6)-(6,7): weight 2
+(6,6)-(7,6): weight 10
+(6,7)-(6,8): weight 2
+(6,8)-(5,8): weight 3
+(6,8)-(6,9): weight 2
+(6,8)-(7,8): weight 10
+(6,9)-(5,9): weight 2
+(6,9)-(7,9): weight 2
+(7,9)-(8,9): weight 2
+(8,0)-(9,0): weight 10
+(8,1)-(8,0): weight 3
+(8,1)-(9,1): weight 10
+(8,2)-(8,1): weight 5
+(8,2)-(9,2): weight 10
+(8,3)-(8,2): weight 7
+(8,3)-(9,3): weight 10
+(8,4)-(8,3): weight 9
+(8,5)-(8,4): weight 6
+(8,5)-(9,5): weight 5
+(8,6)-(8,5): weight 3
+(8,7)-(8,6): weight 5
+(8,9)-(8,8): weight 5
+(8,9)-(9,9): weight 1
+(9,7)-(8,7): weight 5
+(9,7)-(9,6): weight 5
+(9,8)-(9,7): weight 3
+(9,9)-(9,8): weight 1
+
+movement = 8-directional
+mst_total_weight = 370
+vertices_in_component = 76
+mst_edges_count = 75
+goal_reachable_from_S = True
+mst_edges:
+(0,0)-(0,1): weight 1
+(0,0)-(1,0): weight 1
+(0,1)-(0,2): weight 3
+(0,1)-(1,2): weight 3
+(0,2)-(0,3): weight 5
+(0,3)-(0,4): weight 7
+(0,7)-(0,8): weight 15
+(1,0)-(2,0): weight 2
+(1,0)-(2,1): weight 2
+(1,6)-(0,6): weight 12
+(1,6)-(0,7): weight 13
+(1,8)-(0,9): weight 17
+(2,0)-(3,1): weight 4
+(2,1)-(2,2): weight 2
+(2,2)-(2,3): weight 2
+(2,3)-(1,4): weight 5
+(2,3)-(2,4): weight 2
+(2,4)-(3,5): weight 5
+(2,6)-(1,6): weight 7
+(2,6)-(2,7): weight 2
+(2,7)-(1,8): weight 9
+(2,7)-(2,8): weight 2
+(2,8)-(1,9): weight 10
+(2,8)-(2,9): weight 2
+(2,8)-(3,9): weight 2
+(3,1)-(4,0): weight 4
+(3,5)-(2,6): weight 5
+(3,5)-(4,4): weight 9
+(3,9)-(4,8): weight 2
+(3,9)-(4,9): weight 2
+(4,0)-(4,1): weight 3
+(4,0)-(5,0): weight 2
+(4,1)-(4,2): weight 5
+(4,2)-(4,3): weight 7
+(4,6)-(4,5): weight 7
+(4,7)-(4,6): weight 5
+(4,8)-(4,7): weight 3
+(4,8)-(5,8): weight 3
+(4,8)-(5,9): weight 2
+(5,0)-(6,0): weight 2
+(5,0)-(6,1): weight 2
+(5,9)-(6,8): weight 2
+(5,9)-(6,9): weight 2
+(6,0)-(7,0): weight 10
+(6,1)-(6,2): weight 2
+(6,1)-(7,2): weight 10
+(6,2)-(6,3): weight 2
+(6,3)-(5,4): weight 6
+(6,3)-(6,4): weight 6
+(6,3)-(7,4): weight 6
+(6,6)-(6,5): weight 2
+(6,7)-(6,6): weight 2
+(6,7)-(7,6): weight 10
+(6,8)-(6,7): weight 2
+(6,8)-(7,8): weight 10
+(6,8)-(7,9): weight 2
+(7,4)-(8,3): weight 9
+(7,9)-(8,9): weight 2
+(8,0)-(9,0): weight 10
+(8,0)-(9,1): weight 9
+(8,1)-(8,0): weight 3
+(8,1)-(9,2): weight 9
+(8,2)-(8,1): weight 5
+(8,2)-(9,3): weight 9
+(8,3)-(8,2): weight 7
+(8,5)-(8,4): weight 6
+(8,5)-(9,5): weight 5
+(8,5)-(9,6): weight 4
+(8,6)-(8,5): weight 3
+(8,9)-(9,9): weight 1
+(9,7)-(8,6): weight 4
+(9,8)-(8,7): weight 4
+(9,8)-(9,7): weight 3
+(9,9)-(8,8): weight 4
+(9,9)-(9,8): weight 1
+
+Approach: Prim's algorithm starting from S.
+Graph interpretation: undirected weighted graph of all non-wall cells in the component containing S.
+Edge weight: weight(u,v) = value(u) + value(v).
+Cycle avoidance: a cell is added only once, using the in_tree set.
+Time complexity: O((V + E) log V).
+Space complexity: O(V + E).
