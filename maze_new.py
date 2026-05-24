@@ -851,7 +851,7 @@ def report_subtask_b(
     writer.write("which is a natural interpretation for maze navigation where cell values represent entrance fees or difficulty.")
 
     cost_models = [1, 2, 3] if all_cost_models else [1]
-    movement_modes = ["4", "8"] if all_cost_models else [selected_mode]
+    movement_modes = ["4", "8"]
 
     for mode in movement_modes:
         for cost_model in cost_models:
