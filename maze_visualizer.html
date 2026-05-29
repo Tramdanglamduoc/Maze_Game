@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Graph Algorithms — Visualizer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap');
+:root{--bg:#0a0e1a;--bg2:#111827;--bg3:#1a2235;--border:#1e2d45;--text:#e2e8f0;--muted:#64748b;--accent:#38bdf8;--green:#4ade80;--amber:#fbbf24;--purple:#a78bfa;--red:#f87171;--wall:#0f172a;--cell:#1e293b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.container{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+header{text-align:center;margin-bottom:2.5rem;}
+header h1{font-size:clamp(1.6rem,4vw,2.8rem);font-weight:800;letter-spacing:-.02em;}
+header h1 span{color:var(--accent);}
+header p{margin-top:.5rem;color:var(--muted);font-size:.9rem;font-family:'JetBrains Mono',monospace;}
+.team-badge{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin-top:.75rem;}
+.badge{padding:3px 12px;border-radius:999px;font-size:.75rem;font-weight:600;border:1px solid;font-family:'JetBrains Mono',monospace;}
+.ba{border-color:var(--accent);color:var(--accent);}
+.bb{border-color:var(--green);color:var(--green);}
+.bc{border-color:var(--amber);color:var(--amber);}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;}
+.tab{padding:7px 16px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid var(--border);cursor:pointer;background:var(--bg2);color:var(--muted);transition:all .15s;font-family:'JetBrains Mono',monospace;}
+.tab:hover{border-color:var(--accent);color:var(--text);}
+.tab.active{background:var(--accent);color:#0a0e1a;border-color:var(--accent);}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem;}
+.ctrl-label{font-size:.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.ctrl-btn{padding:5px 13px;border-radius:6px;font-size:.78rem;font-weight:600;border:1px solid var(--border);cursor:pointer;background:var(--bg2);color:var(--muted);transition:all .15s;font-family:'JetBrains Mono',monospace;}
+.ctrl-btn:hover{border-color:var(--accent);color:var(--text);}
+.ctrl-btn.active{background:rgba(56,189,248,.15);color:var(--accent);border-color:var(--accent);}
+.anim-btn{padding:6px 16px;border-radius:6px;font-size:.78rem;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#0a0e1a;font-family:'JetBrains Mono',monospace;}
+.anim-btn:disabled{opacity:.4;cursor:not-allowed;}
+.main{display:grid;grid-template-columns:auto 1fr;gap:2rem;align-items:start;}
+@media(max-width:700px){.main{grid-template-columns:1fr;}}
+.maze-label{font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:.5rem;}
+.maze-grid{display:grid;grid-template-columns:repeat(10,44px);gap:2px;}
+.cell{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border-radius:6px;font-family:'JetBrains Mono',monospace;transition:background .3s,transform .2s;position:relative;cursor:default;}
+.cell.wall{background:var(--wall);color:#1e293b;}
+.cell.open{background:var(--cell);color:var(--muted);border:1px solid #1e2d45;}
+.cell.start{background:#065f46;color:#6ee7b7;border:1px solid #059669;font-size:12px;}
+.cell.goal{background:#7c2d12;color:#fca5a5;border:1px solid #dc2626;font-size:12px;}
+.cell.path{background:#1e40af;color:#93c5fd;border:1px solid #3b82f6;}
+.cell.mst{background:#14532d;color:#86efac;border:1px solid #16a34a;}
+.cell.flow{background:#78350f;color:#fcd34d;border:1px solid #d97706;}
+.cell.lit{transform:scale(1.15);box-shadow:0 0 14px rgba(56,189,248,.5);z-index:2;}
+.seq{position:absolute;top:2px;right:4px;font-size:9px;opacity:.7;font-family:'JetBrains Mono',monospace;}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.25rem;}
+.panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:1rem;font-family:'JetBrains Mono',monospace;}
+.stat{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--border);gap:1rem;}
+.stat:last-of-type{border-bottom:none;}
+.sl{font-size:.82rem;color:var(--muted);}
+.sv{font-size:.9rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent);}
+.path-disp{margin-top:1rem;background:var(--bg3);border-radius:8px;padding:.75rem;font-size:.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted);line-height:1.8;word-break:break-all;max-height:120px;overflow-y:auto;border:1px solid var(--border);}
+.path-disp span{color:var(--accent);}
+.why{margin-top:1rem;padding:.875rem 1rem;border-radius:8px;font-size:.8rem;line-height:1.7;color:#94a3b8;border-left:3px solid var(--accent);background:rgba(56,189,248,.04);}
+.why strong{color:var(--text);}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:1rem;}
+.leg{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.bench-sec{margin-top:2.5rem;}
+.bench-hdr{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:1rem;}
+.bench-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:600px){.bench-grid{grid-template-columns:repeat(2,1fr);}}
+.bench-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem;}
+.bench-size{font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:.75rem;text-align:center;}
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.balg{font-size:.65rem;width:14px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.bbg{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.bbar{height:100%;border-radius:4px;width:0;transition:width 1s ease;}
+.bms{font-size:.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);width:40px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>Maze Graph <span>Algorithms</span></h1>
+  <p>maze_10x10_A.txt — Interactive Visualization</p>
+  <div class="team-badge">
+    <span class="badge ba">Tram: A + D</span>
+    <span class="badge bb">Kamalesh: B + E</span>
+    <span class="badge bc">Ilaha: C + exports</span>
+  </div>
+</header>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-t="a">A — BFS shortest</button>
+  <button class="tab" data-t="b">B — Dijkstra cost</button>
+  <button class="tab" data-t="c">C — comparison</button>
+  <button class="tab" data-t="d">D — max flow</button>
+  <button class="tab" data-t="e">E — Prim MST</button>
+</div>
+
+<div class="controls">
+  <span class="ctrl-label">movement:</span>
+  <button class="ctrl-btn active" data-m="4">4-dir</button>
+  <button class="ctrl-btn" data-m="8">8-dir</button>
+  <span class="ctrl-label" id="clbl" style="display:none">cost:</span>
+  <button class="ctrl-btn" data-c="1" id="c1" style="display:none">entering</button>
+  <button class="ctrl-btn" data-c="2" id="c2" style="display:none">leaving</button>
+  <button class="ctrl-btn" data-c="3" id="c3" style="display:none">combined</button>
+  <button class="anim-btn" id="ab">▶ animate path</button>
+</div>
+
+<div class="main">
+  <div>
+    <div class="maze-label">grid — hover to inspect cells</div>
+    <div class="maze-grid" id="grid"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="bench-sec">
+  <div class="bench-hdr">benchmark — actual timing results</div>
+  <div class="bench-grid" id="bench"></div>
+</div>
+</div>
+
+<script>
+const RAW=['S1234X6789','1X2X4X6X89','11111X1111','X3XXX4XXX1','1234543211','1XXX5XXX21','1111511111','9X9X5X9X91','1234512341','9876X4321G'];
+const R=10,C=10,ST=[0,0],GL=[9,9];
+const BD=[{s:'10x10',A:.20,B:.40,D:.91,E:.33},{s:'20x20',A:.75,B:1.90,D:3.56,E:1.40},{s:'50x50',A:4.84,B:11.24,D:31.21,E:9.99},{s:'100x100',A:19.79,B:45.93,D:97.98,E:39.18}];
+
+function cv(r,c){const ch=RAW[r][c];if(ch==='S'||ch==='G')return 0;if(ch==='X')return null;return parseInt(ch);}
+function ok(r,c){return r>=0&&r<R&&c>=0&&c<C&&RAW[r][c]!=='X';}
+function nb(r,c,m){const d4=[[-1,0],[1,0],[0,-1],[0,1]],d8=d4.concat([[-1,-1],[-1,1],[1,-1],[1,1]]);return(m==='8'?d8:d4).map(([dr,dc])=>[r+dr,c+dc]).filter(([nr,nc])=>ok(nr,nc));}
+const K=(r,c)=>r*C+c;
+
+function bfs(m){
+  const vis=new Set([K(...ST)]),par=new Map([[K(...ST),null]]),q=[ST];
+  while(q.length){const[r,c]=q.shift();if(r===GL[0]&&c===GL[1]){const p=[];let cur=[r,c];while(cur){p.push(cur);cur=par.get(K(...cur));}return p.reverse();}
+  for(const[nr,nc]of nb(r,c,m)){const k=K(nr,nc);if(!vis.has(k)){vis.add(k);par.set(k,[r,c]);q.push([nr,nc]);}}}return[];}
+
+function dijk(m,md){
+  const dist=new Map([[K(...ST),0]]),par=new Map([[K(...ST),null]]),heap=[[0,...ST]];
+  function ec(ur,uc,vr,vc){const u=cv(ur,uc)??0,v=cv(vr,vc)??0;if(md===1)return v;if(md===2)return u;return u+v;}
+  while(heap.length){heap.sort((a,b)=>a[0]-b[0]);const[cost,r,c]=heap.shift();const k=K(r,c);if(cost>(dist.get(k)??Infinity))continue;
+  if(r===GL[0]&&c===GL[1]){const p=[];let cur=[r,c];while(cur){p.push(cur);cur=par.get(K(...cur));}return{cost,path:p.reverse()};}
+  for(const[nr,nc]of nb(r,c,m)){const nc2=cost+ec(r,c,nr,nc),nk=K(nr,nc);if(nc2<(dist.get(nk)??Infinity)){dist.set(nk,nc2);par.set(nk,[r,c]);heap.push([nc2,nr,nc]);}}}return{cost:null,path:[]};}
+
+function mflow(m){
+  const cap={},adj={};
+  function ae(ur,uc,vr,vc,c){const u=K(ur,uc),v=K(vr,vc);cap[u]=cap[u]||{};cap[v]=cap[v]||{};adj[u]=adj[u]||new Set();adj[v]=adj[v]||new Set();cap[u][v]=(cap[u][v]||0)+c;cap[v][u]=cap[v][u]||0;adj[u].add(v);adj[v].add(u);}
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){if(!ok(r,c))continue;for(const[nr,nc]of nb(r,c,m)){const iS=nr===ST[0]&&nc===ST[1],iG=nr===GL[0]&&nc===GL[1];const c2=(iS||iG)?100:(cv(nr,nc)||0);if(c2>0)ae(r,c,nr,nc,c2);}}
+  const res={};for(const u in cap){res[u]={};for(const v in cap[u])res[u][v]=cap[u][v];}
+  const src=K(...GL),snk=K(...ST);let tot=0;
+  while(true){const par={},vis=new Set([src]),q=[src];par[src]=null;let found=false;
+  bL:while(q.length){const u=q.shift();for(const v of(adj[u]||new Set())){if(!vis.has(v)&&(res[u]||{})[v]>0){vis.add(v);par[v]=u;q.push(v);if(v===snk){found=true;break bL;}}}}
+  if(!found)break;let pf=Infinity,v=snk;while(v!==src){const u=par[v];pf=Math.min(pf,res[u][v]);v=u;}
+  v=snk;while(v!==src){const u=par[v];res[u][v]-=pf;res[v][u]=(res[v][u]||0)+pf;v=u;}tot+=pf;}
+  const fe=[];for(const u in cap)for(const v in cap[u]){const f=(cap[u][v]||0)-(res[u]?res[u][v]||0:0);if(f>0){const ur=Math.floor(u/C),uc=u%C,vr=Math.floor(v/C),vc=v%C;fe.push([[ur,uc],[vr,vc],f,cap[u][v]]);}}
+  return{tot,fe};}
+
+function primA(m){const inT=new Set(),heap=[[0,...ST,null,null]],edges=[];let tw=0;
+  while(heap.length){heap.sort((a,b)=>a[0]-b[0]);const[w,r,c,pr,pc]=heap.shift();const k=K(r,c);if(inT.has(k))continue;inT.add(k);if(pr!==null){edges.push([[pr,pc],[r,c],w]);tw+=w;}
+  for(const[nr,nc]of nb(r,c,m)){if(!inT.has(K(nr,nc))){const ew=(cv(r,c)||0)+(cv(nr,nc)||0);heap.push([ew,nr,nc,r,c]);}}}
+  return{tw,verts:inT.size,edges};}
+
+let state={tab:'a',mode:'4',cm:1};
+let animT=null;
+
+function pStr(path){return path.map(([r,c])=>`<span>(${r},${c})</span>`).join('→');}
+
+function render(){
+  const{tab,mode,cm}=state;
+  clearInterval(animT);document.getElementById('ab').disabled=false;
+  const sc=tab==='b';
+  document.getElementById('clbl').style.display=sc?'':'none';
+  ['c1','c2','c3'].forEach(id=>{document.getElementById(id).style.display=sc?'':'none';});
+  document.querySelectorAll('[data-c]').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.c)===cm));
+
+  let hl=new Set(),path=[],fm={};
+  let info='',leg=[];
+
+  if(tab==='a'){
+    path=bfs(mode);path.forEach(([r,c])=>hl.add(K(r,c)));
+    info=`<div class="panel-title">subtask A — BFS shortest path</div>
+    <div class="stat"><span class="sl">movement</span><span class="sv">${mode}-directional</span></div>
+    <div class="stat"><span class="sl">minimum moves</span><span class="sv">${path.length?path.length-1:'—'}</span></div>
+    <div class="stat"><span class="sl">cells in path</span><span class="sv">${path.length}</span></div>
+    <div class="stat"><span class="sl">algorithm</span><span class="sv">BFS</span></div>
+    <div class="stat"><span class="sl">time complexity</span><span class="sv">O(V + E)</span></div>
+    <div class="stat"><span class="sl">space complexity</span><span class="sv">O(V)</span></div>
+    <div class="path-disp">${pStr(path)}</div>
+    <div class="why"><strong>Why BFS?</strong> Every move costs 1. BFS explores layer by layer — the first time it reaches G is guaranteed to be the minimum number of moves.</div>`;
+    leg=[['#1e40af','path'],['#065f46','S (start)'],['#7c2d12','G (goal)'],['#0f172a','wall']];
+  } else if(tab==='b'){
+    const{cost,path:p}=dijk(mode,cm);path=p;path.forEach(([r,c])=>hl.add(K(r,c)));
+    const mn={1:'entering: cost = val(v)',2:'leaving: cost = val(u)',3:'combined: val(u)+val(v)'};
+    info=`<div class="panel-title">subtask B — Dijkstra min-cost</div>
+    <div class="stat"><span class="sl">movement</span><span class="sv">${mode}-directional</span></div>
+    <div class="stat"><span class="sl">cost model</span><span class="sv">${cm} — ${mn[cm]}</span></div>
+    <div class="stat"><span class="sl">minimum cost</span><span class="sv" style="color:var(--green)">${cost??'—'}</span></div>
+    <div class="stat"><span class="sl">moves taken</span><span class="sv">${p.length?p.length-1:0}</span></div>
+    <div class="stat"><span class="sl">time complexity</span><span class="sv">O((V+E) log V)</span></div>
+    <div class="stat"><span class="sl">space complexity</span><span class="sv">O(V)</span></div>
+    <div class="path-disp">${pStr(path)}</div>
+    <div class="why"><strong>Why Dijkstra?</strong> Cell values differ so BFS gives wrong answers. Dijkstra always extends the cheapest known route using a heap — guaranteed optimal for non-negative costs.</div>`;
+    leg=[['#1e40af','cheapest path'],['#065f46','S'],['#7c2d12','G'],['#0f172a','wall']];
+  } else if(tab==='c'){
+    const pb4=bfs('4'),pb8=bfs('8'),pd4=dijk('4',1),pd8=dijk('8',1);
+    path=mode==='4'?pb4:pb8;path.forEach(([r,c])=>hl.add(K(r,c)));
+    info=`<div class="panel-title">subtask C — mode comparison</div>
+    <div class="stat"><span class="sl">4-dir shortest moves</span><span class="sv">${pb4.length-1}</span></div>
+    <div class="stat"><span class="sl">8-dir shortest moves</span><span class="sv">${pb8.length-1}</span></div>
+    <div class="stat"><span class="sl">4-dir min cost</span><span class="sv">${pd4.cost}</span></div>
+    <div class="stat"><span class="sl">8-dir min cost</span><span class="sv">${pd8.cost}</span></div>
+    <div class="stat"><span class="sl">diagonal saves moves?</span><span class="sv" style="color:var(--green)">YES — 18→11</span></div>
+    <div class="stat"><span class="sl">diagonal saves cost?</span><span class="sv" style="color:var(--green)">YES — 26→18</span></div>
+    <div class="stat"><span class="sl">shortest = cheapest?</span><span class="sv" style="color:var(--red)">NO</span></div>
+    <div class="why"><strong>Key finding:</strong> The 18-move path costs 51. The cheaper 26-cost path takes 20 moves through row 6 (all 1s). Fewer moves ≠ lower cost.</div>`;
+    leg=[['#1e40af',`${mode}-dir BFS path`],['#065f46','S'],['#7c2d12','G'],['#0f172a','wall']];
+  } else if(tab==='d'){
+    const{tot,fe}=mflow(mode);fe.forEach(([[ur,uc],[vr,vc],f])=>{hl.add(K(ur,uc));hl.add(K(vr,vc));fm[K(ur,uc)]=(fm[K(ur,uc)]||0)+f;});
+    info=`<div class="panel-title">subtask D — Edmonds-Karp max flow</div>
+    <div class="stat"><span class="sl">movement</span><span class="sv">${mode}-directional</span></div>
+    <div class="stat"><span class="sl">max flow G → S</span><span class="sv" style="color:var(--amber)">${tot}</span></div>
+    <div class="stat"><span class="sl">source</span><span class="sv">G (9,9)</span></div>
+    <div class="stat"><span class="sl">sink</span><span class="sv">S (0,0)</span></div>
+    <div class="stat"><span class="sl">active edges</span><span class="sv">${fe.length}</span></div>
+    <div class="stat"><span class="sl">time complexity</span><span class="sv">O(V·E²)</span></div>
+    <div class="stat"><span class="sl">space complexity</span><span class="sv">O(V+E)</span></div>
+    <div class="why"><strong>Why Edmonds-Karp?</strong> BFS finds shortest augmenting path each round. 4-dir walls give flow=1 (one corridor). 8-dir diagonals open 4 parallel routes giving flow=4.</div>`;
+    leg=[['#78350f','flow cells'],['#065f46','S'],['#7c2d12','G'],['#0f172a','wall']];
+  } else {
+    const{tw,verts,edges}=primA(mode);edges.forEach(([u,v])=>{hl.add(K(...u));hl.add(K(...v));});path=edges.map(([u])=>u);
+    info=`<div class="panel-title">subtask E — Prim's MST</div>
+    <div class="stat"><span class="sl">movement</span><span class="sv">${mode}-directional</span></div>
+    <div class="stat"><span class="sl">total MST weight</span><span class="sv" style="color:var(--green)">${tw}</span></div>
+    <div class="stat"><span class="sl">vertices connected</span><span class="sv">${verts}</span></div>
+    <div class="stat"><span class="sl">tree edges</span><span class="sv">${edges.length}</span></div>
+    <div class="stat"><span class="sl">goal reachable</span><span class="sv" style="color:var(--green)">YES</span></div>
+    <div class="stat"><span class="sl">time complexity</span><span class="sv">O((V+E) log V)</span></div>
+    <div class="stat"><span class="sl">space complexity</span><span class="sv">O(V+E)</span></div>
+    <div class="why"><strong>Why Prim's?</strong> Grows tree from S — always adds cheapest edge to an unconnected cell. in_tree set prevents cycles. Weight = val(u)+val(v).</div>`;
+    leg=[['#14532d','MST cells'],['#065f46','S'],['#7c2d12','G'],['#0f172a','wall']];
+  }
+
+  const g=document.getElementById('grid');g.innerHTML='';
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    const ch=RAW[r][c],d=document.createElement('div');d.className='cell';
+    const inHL=hl.has(K(r,c));
+    if(ch==='X')d.classList.add('wall');
+    else if(ch==='S'){d.classList.add('start');d.textContent='S';}
+    else if(ch==='G'){d.classList.add('goal');d.textContent='G';}
+    else if(inHL){
+      d.classList.add(tab==='e'?'mst':tab==='d'?'flow':'path');d.textContent=ch;
+      if(tab==='a'&&path.length){const idx=path.findIndex(([pr,pc])=>pr===r&&pc===c);if(idx>0&&idx<path.length-1){const s=document.createElement('span');s.className='seq';s.textContent=idx;d.appendChild(s);}}
+      if(tab==='d'&&fm[K(r,c)]){const s=document.createElement('span');s.className='seq';s.textContent=fm[K(r,c)];d.appendChild(s);}
+    } else {d.classList.add('open');d.textContent=ch;}
+    d.title=`(${r},${c}) = ${ch==='X'?'wall':ch}`;
+    g.appendChild(d);
+  }
+  document.getElementById('panel').innerHTML=info;
+  document.getElementById('legend').innerHTML=leg.map(([bg,l])=>`<div class="leg"><div class="leg-dot" style="background:${bg}"></div>${l}</div>`).join('');
+}
+
+function animate(){
+  const{tab,mode,cm}=state;
+  let path=[];
+  if(tab==='a')path=bfs(mode);
+  else if(tab==='b')path=dijk(mode,cm).path;
+  else if(tab==='c')path=bfs(mode);
+  else if(tab==='e')path=primA(mode).edges.map(([u])=>u);
+  else{render();return;}
+  render();
+  const cells=document.querySelectorAll('.cell');
+  cells.forEach(c=>{if(c.classList.contains('path')||c.classList.contains('mst')){c.classList.remove('path','mst');c.classList.add('open');}});
+  const btn=document.getElementById('ab');btn.disabled=true;
+  let i=0;
+  animT=setInterval(()=>{
+    if(i>=path.length){clearInterval(animT);btn.disabled=false;return;}
+    const[r,c]=path[i];const cell=cells[r*C+c];
+    if(cell&&!cell.classList.contains('start')&&!cell.classList.contains('goal')){
+      cell.classList.remove('open');cell.classList.add(tab==='e'?'mst':'path','lit');
+      setTimeout(()=>cell.classList.remove('lit'),300);
+    }
+    i++;
+  },130);
+}
+
+document.getElementById('tabs').addEventListener('click',e=>{const t=e.target.dataset.t;if(!t)return;state.tab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.t===t));render();});
+document.querySelector('.controls').addEventListener('click',e=>{
+  const m=e.target.dataset.m;if(m){state.mode=m;document.querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('active',b.dataset.m===m));render();return;}
+  const c=e.target.dataset.c;if(c){state.cm=parseInt(c);render();}
+});
+document.getElementById('ab').addEventListener('click',animate);
+
+// bench
+const cols={A:'var(--accent)',B:'var(--green)',D:'var(--purple)',E:'var(--amber)'};
+const maxD=Math.max(...BD.map(d=>d.D));
+document.getElementById('bench').innerHTML=BD.map(d=>`
+  <div class="bench-card">
+    <div class="bench-size">${d.s}</div>
+    ${['A','B','D','E'].map(a=>`<div class="brow"><span class="balg" style="color:${cols[a]}">${a}</span><div class="bbg"><div class="bbar" style="background:${cols[a]}" data-w="${(d[a]/maxD*100).toFixed(1)}"></div></div><span class="bms">${d[a]}ms</span></div>`).join('')}
+  </div>`).join('');
+setTimeout(()=>document.querySelectorAll('.bbar').forEach(b=>b.style.width=b.dataset.w+'%'),200);
+
+render();
+</script>
+</body>
+</html>
